@@ -5,24 +5,38 @@ name: .NET
 
 on:
   push:
-    branches: [ "main" ]
+    branches: 
+      - "main"
+    paths-ignore:
+      - README.md
   pull_request:
     branches: [ "main" ]
 
-jobs:
-  build:
+  workflow_dispatch:
+  
+env:
+    AZURE_RG: github-actions-staged
+    AZURE_SUBSCRIPTION: 1320e090-7a23-4bcf-a4fc-0e050b4296c0
+    AZURE-LOCATION: westeurope
 
+jobs:
+  build-job:
     runs-on: ubuntu-latest
+    env:
+      configuration: release
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+        - name: Checkout Sources
+          uses: actions/checkout@v2
+        - name: Setup .NET
+          uses: actions/setup-dotnet@v2.0.0
+          with:
+            dotnet-version: 6.0.x
+        - name: Restore dependencies
+          run: dotnet restore
+        - name: Build
+          run: dotnet build --no-restore --configuration ${{ env.configuration }}
+        - name: Test
+          run: dotnet test --no-build --verbosity normal --configuration ${{ env.configuration }}
+        - name: Publish 
+          run: dotnet publish --configuration ${{ env.configuration }} --output ${{runner.temp }}/publish
